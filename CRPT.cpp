@@ -21,7 +21,7 @@ public:
     } solverstatus;
     std::remove_const_t<decltype(std::declval<Eigen::MatrixXd>().ldlt())> ldltcache;
 
-    const SolverStatus& solve(const Eigen::MatrixXd&A, const Eigen::VectorXd& b){
+    const SolverStatus& solve(const Eigen::MatrixXd& A, const Eigen::VectorXd& b){
         return static_cast<Derived*>(this)->solverImpl(A,b);
     }
 };
