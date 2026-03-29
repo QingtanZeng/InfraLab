@@ -1,0 +1,69 @@
+name: conda-bash
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - 'stable/*'
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # os: ["ubuntu-latest", "macos-latest"] 2024-04-26 macos-latest failing
+        # Error: No installed conda 'base' environment found ...; see
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: conda-incubator/setup-miniconda@v3
+      with:
+        activate-environment: cppad
+        auto-update-conda: true
+
+    - name: Install cmake and pkgconfig
+      shell: bash -l {0}
+      run: |
+        conda activate cppad
+        conda install -y cmake
+        conda install -y pkgconfig
+
+    - name: Build CppAD
+      shell: bash -l {0}
+      run: |
+        conda activate cppad
+        if [ "$RUNNER_OS" == "macOS" ]
+        then
+          generator='Unix Makefiles'
+          export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
+          n_job=$(sysctl -n hw.ncpu)
+        elif  [ "$RUNNER_OS" == "Windows" ]
+        then
+          generator='Visual Studio 17 2022'
+          n_job=1
+        else
+          generator='Unix Makefiles'
+          n_job=$(nproc)
+        fi
+        echo "RUNNER_OS=$RUNNER_OS, n_job=$n_job, generator=$generator"
+        conda activate cppad
+        echo $CONDA_PREFIX
+
+        mkdir build
+        cd build
+        cmake .. \
+          -G "$generator" \
+          -D CMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
+          -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        cmake --build . \
+          --config ${{env.BUILD_TYPE}} \
+          --target check install \
+          --parallel $n_job

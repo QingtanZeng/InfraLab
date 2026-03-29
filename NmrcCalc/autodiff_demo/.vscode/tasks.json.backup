@@ -1,0 +1,43 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++ build active file",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",                        // 生成调试信息
+                "-std=c++23",                // 对应你的 settings 配置
+                "${file}",                   // 当前打开的文件 (autodiff_demo.cpp)
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}", // 输出文件名
+                // --- head files ---
+                "-I${workspaceFolder}/lib/cppad/install/include",
+                "-I${workspaceFolder}/lib/cppadcodegen/install/include",
+                "-I/usr/include/eigen3",
+
+                // dynamic link library
+                "-L${workspaceFolder}/lib/cppad/install/lib", 
+
+                "-lcppad_lib", // 或者 -lcppad，去 install/lib 看一下生成的名字
+                "-ldl",
+
+                // --- RPATH (运行时路径) ---
+                // -Wl,-rpath,后面紧跟路径，中间不要有空格
+                "-Wl,-rpath,${workspaceFolder}/lib/cppad/install/lib"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Debugger build task"
+        }
+    ]
+}
