@@ -1,7 +1,20 @@
-Practice of advanced C++ programming for embeded system
+Demos implentations of containers, algorithms, numerical calculation, system programming, datadriven inference 
+in C++ for real-time, safe, heterogeneous embedded system.
 
-**multi-core parallel calculation in discretization***
+**C++ Features for embeddeded systems**
+*CRPT*
+compile-time polymorphism
+
+**System Programming**
+*multi-core parallel calculation in trajectory discretization*
 implement the multi-core parallel calculation in dynamics discretization
 
-**CRPT**
-compile-time polymorphism
+**Numerical Calculation**
+*LDLT*
+
+*BLAS using SVX, SMX*
+
+*AutoDiff*
+auto
+
+****
