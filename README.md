@@ -2,19 +2,19 @@ Demos implentations of containers, algorithms, numerical calculation, system pro
 in C++ for real-time, safe, heterogeneous embedded system.
 
 **C++ Features for embeddeded systems**
-*CRPT*
+1. CRPT
 compile-time polymorphism
 
 **System Programming**
-*multi-core parallel calculation in trajectory discretization*
-implement the multi-core parallel calculation in dynamics discretization
+1. multi-core parallel calculation in trajectory discretization
+Implement the multi-core parallel calculation in dynamics discretization.
 
 **Numerical Calculation**
-*LDLT*
+1. LDLT
 
-*BLAS using SVX, SMX*
+2. BLAS using AVX, AMX / SVE, SME
 
-*AutoDiff*
-auto
+3. AutoDiff
+Automatic differentiation using CppAD, online calculation or offline flow generation.
 
 ****
