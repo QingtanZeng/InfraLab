@@ -40,6 +40,7 @@ struct AlignedAllocator {
  */
 template <F32 T>
 void sgemm_avx2_col(MatrixViewCol<T> A, MatrixViewCol<T> B, MatrixViewCol<T> C){
+    const size_t M = A.extent(0);
     
 
 }
