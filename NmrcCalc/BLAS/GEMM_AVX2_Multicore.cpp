@@ -27,6 +27,18 @@ template <typename T, std::size_t Alignment>
 struct AlignedAllocator {
     using value_type = T;
 
+    // 【新增】提供 rebind 能力，让分配器可以转化去分配类型 U
+    template <class U>
+    struct rebind {
+        using other = AlignedAllocator<U, Alignment>;
+    };
+
+    template <class U>
+    constexpr AlignedAllocator(const AlignedAllocator<U, Alignment>&) noexcept {}
+
+    // 默认构造和拷贝构造（模板拷贝构造也是必需的）
+    AlignedAllocator() = default;
+
     T* allocate(std::size_t n) {
         if (n == 0) return nullptr;
         // C++17 标准的对齐内存分配
@@ -41,10 +53,13 @@ struct AlignedAllocator {
     void deallocate(T* ptr, std::size_t) noexcept {
         std::free(ptr);
     }
-
-    bool operator==(const AlignedAllocator&) const noexcept { return true; }
-    bool operator!=(const AlignedAllocator&) const noexcept { return false; }
 };
+// 【新增】分配器比较操作符（C++ 规范要求）
+template <class T, class U, std::size_t Alignment>
+bool operator==(const AlignedAllocator<T, Alignment>&, const AlignedAllocator<U, Alignment>&) { return true; }
+
+template <class T, class U, std::size_t Alignment>
+bool operator!=(const AlignedAllocator<T, Alignment>&, const AlignedAllocator<U, Alignment>&) { return false; }
 
 /**
  * 针对列优先 (Column-Major) 优化的单精度 GEMM (AVX2 + FMA)
