@@ -27,8 +27,10 @@ public:
 
     // (idxR, idxC) compressed to column-major packed index for lower triangular elements (idxR >= idxC)
     [[nodiscard]] constexpr size_t index(size_t idxR, size_t idxC) const noexcept {
-        assert((idxR >= idxC)&& "Rows must be more than columns!");
-        return (idxC * dim_ - idxC * (idxC - 1) / 2 + (idxR - idxC));
+        assert((idxR >= idxC) && "Row index must be greater than or equal to column index!");
+        // 规避 idxC == 0 时无符号数 idxC - 1 的潜在下溢
+        const size_t col_offset = (idxC == 0) ? 0 : (idxC * dim_ - idxC * (idxC - 1) / 2);
+        return col_offset + (idxR - idxC);
     }
 
     // Dii
@@ -53,27 +55,32 @@ public:
      * L(y) = b, D(z) = y, L^T*x = z
      */
     [[nodiscard]] std::expected<std::vector<double>, std::string>
-    solver(VecViewConst b) const{
-        assert((b.size() == dim_) && "Dimension is NOT equal !" );
-        std::vector<double> x(dim_);    // b > y > z > x
+    solve(VecViewConst b) const {
+        if (b.size() != dim_) {
+            return std::unexpected(std::format("Dimension mismatch: expected {}, got {}", dim_, b.size()));
+        }
 
-        // Step1: L(y) = b
-        double sum = 0.0;
-        for(size_t i=0; i < dim_ ;++i){
-            sum = 0.0;
-            for(size_t k=0; k < i; ++k){
+        std::vector<double> x(dim_); // 复用内存空间: b -> y -> z -> x
+
+        // Step 1: 前向替换求解 L * y = b (L 为单位下三角矩阵, L_ii = 1.0)
+        for (size_t i = 0; i < dim_; ++i) {
+            double sum = 0.0;
+            for (size_t k = 0; k < i; ++k) {
                 sum += L(i, k) * x[k];
             }
             x[i] = b[i] - sum;    // Lii = 1.0
         }
-        // Step2: D(z) = y
-        for(size_t i=0; i < dim_; ++i){
+
+        // Step 2: 对角缩放求解 D * z = y
+        for (size_t i = 0; i < dim_; ++i) {
             x[i] = x[i] / D(i);
         }
-        // Step3: L^T*(x) = z
-        for(size_t i=dim_; i > -1; --i ){
-            sum = 0.0;
-            for(size_t k=dim_; k > i; --k){
+
+        // Step 3: 后向替换求解 L^T * x = z (L^T 为单位上三角矩阵, (L^T)_ik = L_ki)
+        // 注意: size_t 下溢安全的递减循环写法 (i-- > 0 从 dim_-1 遍历到 0)
+        for (size_t i = dim_; i-- > 0; ) {
+            double sum = 0.0;
+            for (size_t k = i + 1; k < dim_; ++k) {
                 sum += L(k, i) * x[k];
             }
             x[i] = x[i] - sum;    // Lii = 1.0
@@ -85,12 +92,25 @@ public:
     /**
      * @brief 重构原矩阵 A = L * D * L^T 用于数值残差检验
      */
-
+    [[nodiscard]] std::vector<double> reconstruct() const {
+        std::vector<double> A_rec(dim_ * dim_, 0.0);
+        Mat2DColView view(A_rec.data(), dim_, dim_);
+        for (size_t i = 0; i < dim_; ++i) {
+            for (size_t j = 0; j < dim_; ++j) {
+                double val = 0.0;
+                size_t k_max = std::min(i, j);
+                for (size_t k = 0; k <= k_max; ++k) {
+                    val += L(i, k) * D(k) * L(j, k);
+                }
+                view[i, j] = val;
+            }
+        }
+        return A_rec;
+    }
 };
 
 /**
  * @brief 执行稠密对称矩阵的 LDLT 分解
- * @param n 矩阵维度
  * @param mat 列主序稠密对称矩阵 (长度 n*n)，mat[i, j]
  * @param tol 主元为 0 的容差
  * @return std::expected 包含紧凑分解结果或错误信息
@@ -114,22 +134,22 @@ LDLTDecomp(Mat2DColViewConst mat, double tol = 1e-7) {
 
         // Step02: Dj = Aj - sum_{k=0}^{j-1} ((Dk*Ljk)*L[j, k])
         double sum = 0.0;
-        for(size_t k=0; k < j; ++k){
-            sum += DkLjk[k]*ldlt.L(j, k);
+        for (size_t k = 0; k < j; ++k) {
+            sum += DkLjk[k] * ldlt.L(j, k);
         }
         double dj = mat[j, j] - sum;
-        if(std::abs(dj) < tol){
-            return std::unexpected("Matrix is singular or requires pivoting at column " + std::to_string(j));;
+        if (std::abs(dj) < tol) {
+            return std::unexpected(std::format("Matrix is singular or requires pivoting at column {}: {:.6e}", j, dj));
         }
-        ldlt.data_[ldlt.index(j,j)] = dj;
+        ldlt.data_[ldlt.index(j, j)] = dj;
 
         // Step03: Lij = 1/Dj * (Aij - sum_{k=0}^{j-1} ((Dk*Ljk)*L[i, k]))
         for(size_t i = j+1; i < dim; ++i){
             sum = 0.0;
-            for(size_t k=0; k < j; ++k){ 
+            for (size_t k = 0; k < j; ++k) {
                 sum += DkLjk[k] * ldlt.L(i, k);
             }
-            double Lij = (mat[i ,j] - sum) / dj;
+            double Lij = (mat[i, j] - sum) / dj;
             ldlt.data_[ldlt.index(i, j)] = Lij;
         }
     }
@@ -151,7 +171,7 @@ int main() {
 
     Mat2DColViewConst A(A_data.data(), n, n);
 
-    auto result = LDLTDecomp(n, A);
+    auto result = LDLTDecomp(A);
     if (!result) {
         std::cerr << "LDLT Decomposition failed: " << result.error() << "\n";
         return 1;

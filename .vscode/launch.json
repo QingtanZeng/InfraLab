@@ -2,26 +2,24 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "C++ Launch (GDB)",
-            "type": "cppdbg",
+            "name": "C++ Launch: ldlt (CMake target)",
+            "type": "lldb",
             "request": "launch",
-            // 这里对应 tasks.json 中生成的输出文件路径
+            "program": "${workspaceFolder}/build/ldlt",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "preLaunchTask": "CMake: build ldlt"
+        },
+        {
+            "name": "C++ Launch: Current File (clang++)",
+            "type": "lldb",
+            "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
             "args": [],
-            "stopAtEntry": false,
             "cwd": "${fileDirname}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ],
-            // 关键：这里必须必须匹配 tasks.json 中的 label
-            "preLaunchTask": "C/C++: g++ build active file"
+            "stopOnEntry": false,
+            "preLaunchTask": "C/C++: clang++ build active file"
         }
     ]
 }

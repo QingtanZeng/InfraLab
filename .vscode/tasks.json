@@ -2,26 +2,15 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "type": "cppbuild",
-            "label": "C/C++: g++ build active file",
-            "command": "/usr/bin/g++",
+            "type": "shell",
+            "label": "CMake: build",
+            "command": "cmake",
             "args": [
-                "-fdiagnostics-color=always",
-                "-g",                        // 生成调试信息
-                "-std=c++23",                // 对应你的 settings 配置
-                "${file}",                   // 当前打开的文件 (autodiff_demo.cpp)
-                "-o",
-                "${fileDirname}/${fileBasenameNoExtension}", // 输出文件名
-                // --- head files ---
-                "-I/usr/include/eigen3",
-
-                // dynamic link library
-
-                // --- RPATH (运行时路径) ---
-                // -Wl,-rpath,后面紧跟路径，中间不要有空格
+                "--build",
+                "${workspaceFolder}/build"
             ],
             "options": {
-                "cwd": "${fileDirname}"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": [
                 "$gcc"
@@ -30,7 +19,91 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "Debugger build task"
+            "detail": "CMake full project build"
+        },
+        {
+            "type": "shell",
+            "label": "CMake: build ldlt",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "${workspaceFolder}/build",
+                "--target",
+                "ldlt"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "CMake target build: ldlt"
+        },
+        {
+            "type": "shell",
+            "label": "CMake: configure",
+            "command": "cmake",
+            "args": [
+                "-B",
+                "${workspaceFolder}/build",
+                "-S",
+                "${workspaceFolder}",
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "detail": "CMake configure project"
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: clang++ build active file",
+            "command": "/usr/bin/clang++-18",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "-std=c++23",
+                "-stdlib=libc++",
+                "-fuse-ld=lld",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}",
+                "-I/usr/include/eigen3"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "Direct build active file using clang++-18 and libc++"
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++ build active file",
+            "command": "/usr/bin/clang++-18",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "-std=c++23",
+                "-stdlib=libc++",
+                "-fuse-ld=lld",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}",
+                "-I/usr/include/eigen3"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "Compatibility alias: redirected to clang++-18 C++23 libc++"
         }
     ]
 }
