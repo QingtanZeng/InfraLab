@@ -1,0 +1,13 @@
+CompileFlags:
+  Compiler: clang++
+  Add:
+    - -xc++
+    - -std=c++23
+    - -stdlib=libc++
+  Remove:
+    - -std=gnu*
+    - -std=c1*
+    - -std=c2*
+    - -std=c9*
+    - -std=c++1*
+    - -std=c++20
