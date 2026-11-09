@@ -12,6 +12,16 @@
             "preLaunchTask": "CMake: build ldlt"
         },
         {
+            "name": "C++ Launch: ldlt_IR (CMake target)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/ldlt_IR",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "preLaunchTask": "CMake: build ldlt"
+        },
+        {
             "name": "C++ Launch: Current File (clang++)",
             "type": "lldb",
             "request": "launch",

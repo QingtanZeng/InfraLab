@@ -49,3 +49,4 @@ endif()
 # ==========================================
 # LDLT 分解目标 (NmrcCalc/LAPACK/LDLT.cpp)
 add_executable(ldlt NmrcCalc/LAPACK/LDLT.cpp)
+add_executable(ldlt_IR NmrcCalc/LAPACK/LDLT_IR.cpp)
